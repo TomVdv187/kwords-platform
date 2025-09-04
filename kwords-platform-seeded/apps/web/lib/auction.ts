@@ -106,16 +106,21 @@ async function fetchOpenRtbBids(request: AuctionInput): Promise<CreativePayload[
       const bid = await res.json();
       // Expecting OpenRTB SeatBid -> Bid; use ext for text creative
       const seatbids = bid.seatbid || [];
-      for (const sb of seatbids) {
-        for (const b of (sb.bid || [])) {
-          const ext = b.ext || {};
-          if (ext.type === 'text' && ext.title && ext.url) {
-            payloads.append({
-              type: 'text',
-              title: ext.title,
-              description: ext.description || '',
-              ctaText: ext.ctaText || 'Learn more',
-              clickUrl: ext.url,
+     for (const sb of seatbids) {
+  for (const b of (sb.bid || [])) {
+    const ext = b.ext || {};
+    if (ext.type === 'text' && ext.title && ext.url) {
+      payloads.push({
+        type: 'text',
+        title: ext.title,
+        description: ext.description || '',
+        ctaText: ext.ctaText || 'Learn more',
+        clickUrl: ext.url,
+        ecpmCents: Math.floor((b.price || 0) * 100),
+      });
+    }
+  }
+}
               ecpmCents: Math.floor((b.price || 0) * 100), // USD -> cents (assume 1 unit = $)
             } as CreativePayload)
           }
