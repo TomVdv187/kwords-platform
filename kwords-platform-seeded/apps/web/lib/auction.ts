@@ -83,7 +83,7 @@ async function fetchOpenRtbBids(request: AuctionInput): Promise<CreativePayload[
     },
     imp: [{
       id: "1",
-      banner: { w: 1, h: 1, pos: 7 }, // placeholder; creative returned as text via ext
+      banner: { w: 1, h: 1, pos: 7 },
       ext: { placement: "keyword", keyword: request.keyword }
     }],
   };
@@ -98,29 +98,25 @@ async function fetchOpenRtbBids(request: AuctionInput): Promise<CreativePayload[
           'Content-Type': 'application/json',
           ...(authHeaders[ep] || {}),
         },
-        body: JSON.stringify(body),
         // @ts-ignore
-        cache: 'no-store'
+        cache: 'no-store',
+        body: JSON.stringify(body),
       });
       if (!res.ok) return;
       const bid = await res.json();
-      // Expecting OpenRTB SeatBid -> Bid; use ext for text creative
       const seatbids = bid.seatbid || [];
-     for (const sb of seatbids) {
-  for (const b of (sb.bid || [])) {
-   const ext = b.ext || {};
-if (ext.type === 'text' && ext.title && ext.url) {
-  payloads.push({
-    type: 'text',
-    title: ext.title,
-    description: ext.description || '',
-    ctaText: ext.ctaText || 'Learn more',
-    clickUrl: ext.url,
-    ecpmCents: Math.floor((b.price || 0) * 100),
-  });
-}
-              ecpmCents: Math.floor((b.price || 0) * 100), // USD -> cents (assume 1 unit = $)
-            } as CreativePayload)
+      for (const sb of seatbids) {
+        for (const b of (sb.bid || [])) {
+          const ext = b.ext || {};
+          if (ext.type === 'text' && ext.title && ext.url) {
+            payloads.push({
+              type: 'text',
+              title: ext.title,
+              description: ext.description || '',
+              ctaText: ext.ctaText || 'Learn more',
+              clickUrl: ext.url,
+              ecpmCents: Math.floor((b.price || 0) * 100),
+            });
           }
         }
       }
@@ -131,6 +127,7 @@ if (ext.type === 'text' && ext.title && ext.url) {
 
   return payloads;
 }
+
 
 export async function runAuction(input: AuctionInput): Promise<CreativePayload | null> {
   // TCF gate if required
